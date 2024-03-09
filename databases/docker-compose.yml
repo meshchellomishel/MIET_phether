@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  db_users:
+    container_name: db_users
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: pheather
+      POSTGRES_USER: admin
+      POSTGRES_DB: db_users
+    image: postgres:16.2
+  
+  db_weather_cache:
+    container_name: db_weather_cache
+    ports:
+      - 5431:5431
+    environment:
+      POSTGRES_PASSWORD: pheather
+      POSTGRES_USER: admin
+      POSTGRES_DB: db_weather_cache
+    image: postgres:16.2
+  
+  pg_admin:
+    container_name: pg_admin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mail.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - 5050:80
