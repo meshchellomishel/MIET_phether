@@ -1,0 +1,60 @@
+{
+    "name": "ensi/laravel-query-builder-helpers",
+    "description": "This package contains extensions for laravel-query-builder",
+    "keywords": [
+        "Greensight",
+        "Ensi",
+        "laravel",
+        "query-builder-extensions"
+    ],
+    "homepage": "https://github.com/ensi-platform/laravel-query-builder-helpers",
+    "license": "MIT",
+    "require": {
+        "php": "^8.1",
+        "laravel/framework": "^9.0 || ^10.0",
+        "spatie/laravel-query-builder": "^5.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.9",
+        "laravel/pint": "^1.0",
+        "nunomaduro/collision": "^6.0 || ^7.0",
+        "orchestra/testbench": "^7.0 || ^8.0",
+        "pestphp/pest": "^1.21 || ^2.0",
+        "pestphp/pest-plugin-laravel": "^1.1 || ^2.0",
+        "phpstan/extension-installer": "^1.3",
+        "phpunit/phpunit": "^9.5 || ^10.0",
+        "spaze/phpstan-disallowed-calls": "^2.16"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ensi\\QueryBuilderHelpers\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ensi\\QueryBuilderHelpers\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "phpstan": "vendor/bin/phpstan analyse -c phpstan.neon.dist",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ensi\\QueryBuilderHelpers\\QueryBuilderHelpersServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

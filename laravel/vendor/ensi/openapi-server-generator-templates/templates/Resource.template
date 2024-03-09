@@ -1,0 +1,19 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Http\ApiV1\Support\Resources\BaseJsonResource;
+
+/**
+ * @mixin todo
+ */
+class {{ className }} extends BaseJsonResource
+{
+    public function toArray($request): array
+    {
+        // todo
+        return [
+            {{ properties }}
+        ];
+    }
+}

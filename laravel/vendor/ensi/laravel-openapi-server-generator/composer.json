@@ -1,0 +1,57 @@
+{
+    "name": "ensi/laravel-openapi-server-generator",
+    "description": "",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Nekrasov Ilya",
+            "email": "nekrasov@greensight.ru"
+        }
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.1",
+        "devizzent/cebe-php-openapi": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ensi\\LaravelOpenApiServerGenerator\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ensi\\LaravelOpenApiServerGenerator\\Tests\\": "tests"
+        }
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.2",
+        "mockery/mockery": ">=1.3.2",
+        "pestphp/pest": "^1.18 || ^2.0",
+        "pestphp/pest-plugin-laravel": "^1.1 || ^2.0",
+        "php-parallel-lint/php-var-dump-check": "^0.5.0",
+        "spatie/laravel-ray": "^1.23",
+        "orchestra/testbench": "^6.23 || ^7.0 || ^8.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ensi\\LaravelOpenApiServerGenerator\\LaravelOpenApiServerGeneratorServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "cs": "php-cs-fixer fix --config .php-cs-fixer.php",
+        "test": "./vendor/bin/pest --no-coverage",
+        "test-coverage": "XDEBUG_MODE=coverage ./vendor/bin/pest --coverage"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true,
+            "pestphp/pest-plugin": true
+        }
+    }
+}

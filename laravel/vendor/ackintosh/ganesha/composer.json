@@ -1,0 +1,55 @@
+{
+  "name": "ackintosh/ganesha",
+  "description": "PHP implementation of Circuit Breaker pattern",
+  "keywords": ["circuit breaker", "microservices", "fault tolerance", "error handling", "guzzle middleware"],
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "akihito.nakano",
+      "email": "sora.akatsuki@gmail.com"
+    }
+  ],
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/kornrunner/phpunit-testlistener-vcr"
+    }
+  ],
+  "require": {
+    "php": ">=8.0",
+    "psr/http-message": "^1.0|^2.0"
+  },
+  "suggest": {
+    "guzzlehttp/guzzle": "Allows the usage of the Guzzle Middleware",
+    "symfony/http-client": "Allows the usage of the Ganesha HttpClient",
+    "ext-redis": "Allows the usage of RedisAdapter with Redis, RedisArray and RedisCluster",
+    "ext-memcached": "Allows the usage of MemcachedAdapter",
+    "ext-mongodb": "Allows the usage of MongoDBAdapter"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5.10",
+    "symfony/http-client": "^5.3|^6.0",
+    "symfony/yaml": "^3.0|^4.0|^5.0|^6.0",
+    "php-vcr/php-vcr": "^1.4.5",
+    "php-vcr/phpunit-testlistener-vcr": "dev-php8 as 3.2.2",
+    "php-coveralls/php-coveralls": "~2.5",
+    "predis/predis": "^1.1",
+    "guzzlehttp/guzzle": "^7.4.5",
+    "friendsofphp/php-cs-fixer": "^v3.1.0",
+    "vimeo/psalm" : "*",
+    "ext-redis": "~5.1",
+    "ext-memcached": "~3.1",
+    "ext-mongodb": "~1.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "Ackintosh\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Ackintosh\\": "tests/Ackintosh/"
+    }
+  }
+}

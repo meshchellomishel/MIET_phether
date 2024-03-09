@@ -1,0 +1,13 @@
+{
+   "name": "ensi/openapi-client-generator-php-templates",
+   "description": "",
+   "type": "library",
+   "license": "MIT",
+   "authors": [
+     {
+       "name": "Nekrasov Ilya",
+       "email": "nekrasov@greensight.ru"
+     }
+   ]
+ }
+ 

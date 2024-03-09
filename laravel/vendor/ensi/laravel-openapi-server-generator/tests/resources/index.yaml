@@ -1,0 +1,291 @@
+openapi: 3.0.1
+info:
+  title: Test
+  version: 1.0.0
+  description: Тестовый конфиг
+paths:
+  /resources:test-rename-from-key-request:
+    post:
+      operationId: testRenameFromKeyRequest
+      x-lg-handler: '\App\Http\Controllers\ResourcesController@testRenameFromKeyRequest'
+      responses:
+        "200":
+          description: Успешный ответ c контекстом
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/test_resource_generation.yaml#/ResourceDataWithNameResponse'
+  /resources:test-full-generate/{id}:
+    post:
+      operationId: testFullGenerate
+      x-lg-handler: '\App\Http\Controllers\ResourcesController@testFullGenerate'
+      x-lg-middleware: 'middleware'
+      x-lg-without-middleware: 'without-middleware'
+      parameters:
+        - name: id
+          in: path
+      responses:
+        "200":
+          description: Успешный ответ c контекстом
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/test_resource_generation.yaml#/ResourceForTestResourceGenerationResponse'
+        "500":
+          $ref: '#/components/responses/ServerError'
+  /resources:test-empty-rename-request:
+    post:
+      operationId: testEmptyRenameRequest
+      x-lg-handler: '\App\Http\Controllers\ResourcesController@testEmptyRenameRequest'
+      x-lg-request-class-name: ''
+      responses:
+        "200":
+          description: Успешный ответ c контекстом
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/test_resource_generation.yaml#/ResourceDataDataResponse'
+  /resources:test-rename-request:
+    post:
+      operationId: testRenameRequest
+      x-lg-handler: '\App\Http\Controllers\ResourcesController@testRenameRequest'
+      x-lg-request-class-name: 'TestFooRenameRequest'
+      responses:
+        "200":
+          description: Успешный ответ c контекстом
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/test_resource_generation.yaml#/ResourceRootResponse'
+  /resources:test-without-handler:
+    post:
+      operationId: testWithoutHandler
+      responses:
+        "200":
+          description: Успешный ответ
+  /resources:test-with-skip:
+    post:
+      operationId: testWithSkip
+      x-lg-handler: '\App\Http\Controllers\SkipController@testWithSkip'
+      x-lg-skip-resource-generation: true
+      x-lg-skip-controller-generation: true
+      x-lg-skip-request-generation: true
+      x-lg-skip-tests-generation: true
+      x-lg-skip-policy-generation: true
+      responses:
+        "200":
+          description: Успешный ответ
+  /resources:test-bad-handler:
+    post:
+      operationId: testBadHandler
+      x-lg-handler: ''
+      responses:
+        "200":
+          description: Успешный ответ
+  /resources:test-global-namespace:
+    post:
+      operationId: withoutNamespace
+      x-lg-handler: 'WithoutNamespaceController@testWithoutContext'
+      responses:
+        "200":
+          description: Успешный ответ
+  /resources:test-without-responses:
+    post:
+      operationId: testWithoutResponses
+      x-lg-handler: '\App\Http\Controllers\WithoutResponsesController@testWithoutResponses'
+      x-lg-skip-request-generation: true
+  /resources:test-laravel-validations-application-json-request:
+    post:
+      operationId: laravelValidationsApplicationJson
+      x-lg-handler: '\App\Http\Controllers\ResourcesController@testLaravelValidationsApplicationJsonRequest'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/test_generation_request_validation.yaml#/ResourceForTestValidationRules'
+      responses:
+        "200":
+          description: Успешный ответ
+  /resources:test-laravel-validations-multipart-form-data-request:
+    post:
+      operationId: laravelValidationsMultipartFormData
+      x-lg-handler: '\App\Http\Controllers\ResourcesController@testLaravelValidationsMultipartFormDataRequest'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: './common_schemas.yaml#/MultipartFileUploadRequest'
+      responses:
+        "200":
+          description: Успешный ответ
+  /resources:test-laravel-validations-non-available-content-type:
+    post:
+      operationId: laravelValidationsNonAvailableContentType
+      x-lg-handler: '\App\Http\Controllers\ResourcesController@testLaravelValidationsNonAvailableContentTypeRequest'
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: pong
+      responses:
+        "200":
+          description: Успешный ответ
+  /resources:test-generate-resource-bad-response-key:
+    post:
+      operationId: generateResourceBadResponseKey
+      x-lg-handler: '\App\Http\Controllers\ResourcesController@testGenerateResourceBadResponseKey'
+      x-lg-skip-request-generation: true
+      responses:
+        "200":
+          description: Успешный ответ c контекстом
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/test_resource_generation.yaml#/GenerateResourceBadResponseKeyResponse'
+  /resources:test-generate-without-properties:
+    post:
+      operationId: generateResourceWithoutProperties
+      x-lg-handler: '\App\Http\Controllers\ResourcesController@testGenerateResourceWithoutProperties'
+      x-lg-skip-request-generation: true
+      responses:
+        "200":
+          description: Успешный ответ c контекстом
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/test_resource_generation.yaml#/GenerateResourceWithoutPropertiesResponse'
+  /resources:test-class-name-with-dir:
+    post:
+      operationId: testNamespaceWithDir
+      x-lg-handler: '\App\Http\Controllers\Foo\TestController@testNamespaceWithDirRequest'
+      x-lg-request-class-name: 'WithDirRequests/Request'
+      responses:
+        "200":
+          description: Успешный ответ c контекстом
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/test_resource_generation.yaml#/ResourceDataDataResponse'
+  /resources:test-resource-class-name-with-dir:
+    post:
+      operationId: testNamespaceWithDir
+      x-lg-handler: '\App\Http\Controllers\Foo\TestController@testNamespaceWithDirResource'
+      responses:
+        "200":
+          description: Успешный ответ c контекстом
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/test_resource_generation.yaml#/ResourceWithDirResponse'
+  /policies:test-generate-policy-method-foo:
+    post:
+      operationId: generatePolicyMethodFoo
+      x-lg-handler: '\App\Http\Controllers\PoliciesController@methodFoo'
+      x-lg-skip-request-generation: true
+      responses:
+        "403":
+          description: Ошибка прав доступа
+  /policies:test-generate-policy-method-bar:
+    post:
+      operationId: generatePolicyMethodBar
+      x-lg-handler: '\App\Http\Controllers\PoliciesController@methodBar'
+      x-lg-skip-request-generation: true
+      responses:
+        "403":
+          description: Ошибка прав доступа
+  /policies:test-generate-policy-method-without-forbidden-response:
+    post:
+      operationId: generatePolicyMethodWithoutForbiddenResponse
+      x-lg-handler: '\App\Http\Controllers\PoliciesController@methodWithoutForbiddenResponse'
+      x-lg-skip-request-generation: true
+      responses:
+        "200":
+          description: Успешный ответ c контекстом
+  /namespace-sort-1:
+    post:
+      operationId: namespaceSort1
+      x-lg-handler: '\App\Http\Controllers\FooItemsController@test'
+      x-lg-skip-request-generation: true
+      x-lg-skip-tests-generation: true
+      responses:
+        "200":
+          description: Успешный ответ
+  /namespace-sort-2:
+    post:
+      operationId: namespaceSort2
+      x-lg-handler: '\App\Http\Controllers\FoosController@test'
+      x-lg-skip-request-generation: true
+      x-lg-skip-tests-generation: true
+      responses:
+        "200":
+          description: Успешный ответ
+  /namespace-sort-3:
+    post:
+      operationId: namespaceSort3
+      x-lg-handler: '\App\Http\Controllers\Controller11@test'
+      x-lg-skip-request-generation: true
+      x-lg-skip-tests-generation: true
+      responses:
+        "200":
+          description: Успешный ответ
+  /namespace-sort-4:
+    post:
+      operationId: namespaceSort4
+      x-lg-handler: '\App\Http\Controllers\Controller2@test'
+      x-lg-skip-request-generation: true
+      x-lg-skip-tests-generation: true
+      responses:
+        "200":
+          description: Успешный ответ
+components:
+  responses:
+    ServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                description: Массив ошибок
+            required:
+              - errors
+  schemas:
+    TestIntegerEnum:
+      type: integer
+      description: >
+        Пример перечисления. Расшифровка значений:
+          * `1` - Пример 1
+          * `2` - Пример 2
+      enum:
+        - 1
+        - 2
+      x-enum-varnames:
+        - EXAMPLE_1
+        - EXAMPLE_2
+      x-enum-descriptions:
+        - Пример 1
+        - Пример 2
+    TestStringEnum:
+      type: string
+      description: >
+        Пример перечисления. Расшифровка значений:
+          * `example_1` - Пример 1
+          * `example_2` - Пример 2
+      enum:
+        - example_1
+        - example_2
+      x-enum-varnames:
+        - EXAMPLE_1
+        - EXAMPLE_2
+      x-enum-descriptions:
+        - Пример 1
+        - Пример 2
+
+
+

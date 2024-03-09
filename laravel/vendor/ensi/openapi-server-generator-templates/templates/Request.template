@@ -1,0 +1,16 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Http\ApiV1\Support\Requests\BaseFormRequest;
+{{ uses }}
+
+class {{ className }} extends BaseFormRequest
+{
+    public function rules(): array
+    {
+        return [
+            {{ rules }}
+        ];
+    }
+}

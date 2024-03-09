@@ -1,0 +1,17 @@
+# IDEs #
+###################
+*.sublime-project
+*.sublime-workspace
+/.idea/
+*.komodoproject
+
+vendor
+node_modules/
+build
+.php_cs.cache
+.php-cs-fixer.cache
+.huskyrc
+composer.lock
+npm-debug.log
+package-lock.json
+.phpunit.result.cache

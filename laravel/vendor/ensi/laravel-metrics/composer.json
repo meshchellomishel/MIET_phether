@@ -1,0 +1,41 @@
+{
+    "name": "ensi/laravel-metrics",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ensi\\LaravelMetrics\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ensi\\LaravelMetrics\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Ensi\\LaravelMetrics\\MetricsServiceProvider"
+            ]
+        }
+    },
+    "require": {
+        "php": ">=8.1",
+        "psr/http-message": "^1.0",
+        "guzzlehttp/guzzle": "^7.0",
+        "ensi/laravel-prometheus": "^1.0"
+    },
+    "require-dev": {
+        "franzl/studio": "^0.16.0",
+        "orchestra/testbench": "^7.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "franzl/studio": true
+        }
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit"
+    }
+}

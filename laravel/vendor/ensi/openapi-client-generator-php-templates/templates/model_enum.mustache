@@ -1,0 +1,30 @@
+class {{classname}}
+{
+    {{#allowableValues}}{{#enumVars}}{{#enumDescription}}
+    /** {{enumDescription}} */
+    {{/enumDescription}}public const {{{name}}} = {{{value}}};
+    {{/enumVars}}{{/allowableValues}}
+    /**
+     * Gets allowable values of the enum
+     * @return string[]
+     */
+    public static function getAllowableEnumValues(): array
+    {
+        return [
+            {{#allowableValues}}{{#enumVars}}self::{{{name}}},{{^-last}}
+            {{/-last}}{{/enumVars}}{{/allowableValues}}
+        ];
+    }
+
+    /**
+    * Gets allowable values and titles of the enum
+    * @return string[]
+    */
+    public static function getDescriptions(): array
+    {
+        return [
+            {{#allowableValues}}{{#enumVars}}self::{{{name}}} => '{{#enumDescription}}{{enumDescription}}{{/enumDescription}}',{{^-last}}
+            {{/-last}}{{/enumVars}}{{/allowableValues}}
+        ];
+    }
+}
