@@ -2,25 +2,15 @@ version: "3.9"
 
 services:
   db_users:
-    container_name: db_users
+    container_name: db_weather
     ports:
-      - 5432:5432
+      - 5430:5432
     environment:
       POSTGRES_PASSWORD: pheather
       POSTGRES_USER: admin
-      POSTGRES_DB: db_users
+      POSTGRES_DB: db_weather
     image: postgres:16.2
-  
-  db_weather_cache:
-    container_name: db_weather_cache
-    ports:
-      - 5431:5431
-    environment:
-      POSTGRES_PASSWORD: pheather
-      POSTGRES_USER: admin
-      POSTGRES_DB: db_weather_cache
-    image: postgres:16.2
-  
+    
   pg_admin:
     container_name: pg_admin
     image: dpage/pgadmin4
