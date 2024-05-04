@@ -3,7 +3,7 @@
         'name' => 'laravel/laravel',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '32253b8592d9e23d9f5589e95a6965b86047cea7',
+        'reference' => '9b06fb28b15dd38d85077a1fc43792360e72e559',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -111,6 +111,15 @@
             'replaced' => array(
                 0 => '*',
             ),
+        ),
+        'defstudio/telegraph' => array(
+            'pretty_version' => 'v1.44.4',
+            'version' => '1.44.4.0',
+            'reference' => 'e298fbf430b69853faa1c290d472c8f7093c30f7',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../defstudio/telegraph',
+            'aliases' => array(),
+            'dev_requirement' => false,
         ),
         'devizzent/cebe-php-openapi' => array(
             'pretty_version' => '1.0.1',
@@ -754,7 +763,7 @@
         'laravel/laravel' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '32253b8592d9e23d9f5589e95a6965b86047cea7',
+            'reference' => '9b06fb28b15dd38d85077a1fc43792360e72e559',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -1305,8 +1314,8 @@
         'psr/log-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '1.0|2.0|3.0',
-                1 => '3.0.0',
+                0 => '3.0.0',
+                1 => '1.0|2.0|3.0',
             ),
         ),
         'psr/simple-cache' => array(
