@@ -2,6 +2,7 @@
 
 namespace App\Telegram;
 
+use AllowDynamicProperties;
 use DefStudio\Telegraph\Facades\Telegraph;
 use DefStudio\Telegraph\Handlers\WebhookHandler;
 use DefStudio\Telegraph\Keyboard\Button;
@@ -19,7 +20,8 @@ class Handler extends WebhookHandler
             'hello' => 'Say hello',
             'help' => 'Show functional',
             'show_settings' => 'Show your setting',
-            'new_setting' => 'Add new setting'
+            'new_setting' => 'Add new setting',
+            'change_setting' => 'Change your existing setting',
         ])->send();
     }
 
@@ -33,6 +35,15 @@ class Handler extends WebhookHandler
         );
     }
     public function new_setting(string $cmd): void
+    {
+        $parsed_cmd = explode(' ', $cmd);
+
+        $text = "Your command: \n\n" . implode(' ', $parsed_cmd);
+
+        $this->reply($text);
+    }
+
+    public function change_setting(string $cmd): void
     {
         $parsed_cmd = explode(' ', $cmd);
 
@@ -68,12 +79,25 @@ class Handler extends WebhookHandler
     public function change(int $id): void
     {
         Telegraph::message(
-            "Setting was successfully changed"
+            "Select what you are want to change"
         )->keyboard(
             Keyboard::make()->buttons([
-                Button::make("↩️ Cancel")->action('cancel')->param('id', $id),
+                Button::make("City")->action('change_city')->param('id', $id),
+                Button::make("Time")->action('change_time')->param('id', $id),
             ])
         )->send();
+    }
+
+    public function change_city(int $id): void
+    {
+        $this->chat->storage()->set('cityStartChange', true);
+        $this->reply("Send city in new message:");
+    }
+
+    public function change_time(int $id): void
+    {
+        $this->chat->storage()->set('timeStartChange', true);
+        $this->reply("Send time in new message:");
     }
 
     public function delete(int $id): void
@@ -102,5 +126,21 @@ class Handler extends WebhookHandler
     {
         Log::debug('[TELEGRAM]: Receive unknown command: ' . json_encode($this->message->toArray(), JSON_UNESCAPED_UNICODE));
         $this->reply('I don\`t know this command, please retry');
+    }
+
+    protected function handleChatMessage(Stringable $text):void
+    {
+        $timeStarted = $this->chat->storage()->get('timeStartChange');
+        $cityStarted = $this->chat->storage()->get('cityStartChange');
+
+        Log::debug('[TELEGRAM]: Received message: (' . ($timeStarted ? "true" : "false") . ', ' . ($cityStarted ? "true" : "false") . '): ' . json_encode($this->message->toArray(), JSON_UNESCAPED_UNICODE));
+        if ($cityStarted) {
+            Telegraph::message("Received city " . $text)->send();
+            $this->chat->storage()->set('cityStartChange', false);
+        }
+        if ($timeStarted) {
+            Telegraph::message("Received time " . $text)->send();
+            $this->chat->storage()->set('timeStartChange', false);
+        }
     }
 }
