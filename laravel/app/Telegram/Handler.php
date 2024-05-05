@@ -174,8 +174,8 @@ class Handler extends WebhookHandler
 
             foreach ($settings as &$value) {
                 $msg .= $i . '. ' . $value->cityName . ' ' . $value->notifyTime . ' ' .
-                    ($value->changeNotify ? "notifyAlways" : "noNotify") . ' ' .
-                    ($value->mute ? "muted" : "unmuted") . "\n";
+                    ($value->changeNotify ? "🔔notify" : "🔕noNotify") . ' ' .
+                    ($value->mute ? "🔕muted" : "🔊unmuted") . "\n";
                 $i += 1;
                 $buttons[] = Button::make($value->cityName)->action('menu')->param('id', $value->id);
             }
@@ -222,8 +222,8 @@ class Handler extends WebhookHandler
             Keyboard::make()->buttons([
                 Button::make("🏢 City")->action('change_city'),
                 Button::make("🕒 Time")->action('change_time'),
-                Button::make($setting['changeNotify'] ? "No Notify" : "Notify")->action('change_notify'),
-                Button::make($setting['changeNotify'] ? "Unmute" : "Mute")->action('change_mute'),
+                Button::make($setting['changeNotify'] ? "🔕 No Notify" : "🔔 Notify")->action('change_notify'),
+                Button::make($setting['changeNotify'] ? "🔊 Unmute" : "🔇 Mute")->action('change_mute'),
             ])
         )->send();
     }
@@ -237,8 +237,10 @@ class Handler extends WebhookHandler
 
         DB::table('user__settings')->update([
             "id" => $setting['id'],
-            "mute" => ($setting['mute'] != 0 ? false : true),
+            "mute" => !($setting['mute'] != 0),
         ]);
+
+        $this->reply("Changed");
     }
     public function change_notify()
     {
@@ -249,8 +251,10 @@ class Handler extends WebhookHandler
 
         DB::table('user__settings')->update([
             "id" => $setting['id'],
-            "changeNotify" => ($setting['changeNotify'] != 0 ? false : true),
+            "changeNotify" => !($setting['changeNotify'] != 0),
         ]);
+
+        $this->reply("Changed");
     }
     public function change_city(): void
     {
