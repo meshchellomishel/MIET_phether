@@ -21,6 +21,8 @@ return new class extends Migration
             $table->time('notifyTime');
             $table->boolean('changeNotify');
             $table->boolean('mute');
+
+            $table->boolean('notified');
             $table->timestamps();
         });
     }
