@@ -32,6 +32,12 @@ class Handler extends WebhookHandler
 
         return $user_id;
     }
+    private function get_setting_string(\stdClass $value)
+    {
+        return $value->cityName . ' ' . $value->notifyTime . ' ' .
+        ($value->changeNotify ? "🔔notify" : "🔕noNotify") . ' ' .
+        ($value->mute ? "🔕muted" : "🔊unmuted") . "\n";
+    }
     private function get_last_setting()
     {
         $setting = $this->chat->storage()->get('lastSetting');
@@ -139,6 +145,7 @@ class Handler extends WebhookHandler
             "changeNotify" => (count($parsed_cmd) > 2) ? $parsed_cmd[2] : true,
             "mute" => (count($parsed_cmd) > 3) ? $parsed_cmd[3] : false,
 
+            "notified" => false,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);
@@ -173,9 +180,7 @@ class Handler extends WebhookHandler
             $msg = "Your settings:\n\n";
 
             foreach ($settings as &$value) {
-                $msg .= $i . '. ' . $value->cityName . ' ' . $value->notifyTime . ' ' .
-                    ($value->changeNotify ? "🔔notify" : "🔕noNotify") . ' ' .
-                    ($value->mute ? "🔕muted" : "🔊unmuted") . "\n";
+                $msg .= $i . '. ' . $this->get_setting_string($value);
                 $i += 1;
                 $buttons[] = Button::make($value->cityName)->action('menu')->param('id', $value->id);
             }
@@ -200,7 +205,7 @@ class Handler extends WebhookHandler
 
         Telegraph::message(
             "Current setting:\n\n" .
-            "\tZelenograd 12:00 notified unmuted"
+            $this->get_setting_string($setting)
         )->keyboard(
             Keyboard::make()->buttons([
                 Button::make("✍ change")->action('change'),
@@ -235,10 +240,9 @@ class Handler extends WebhookHandler
             return;
         }
 
-        DB::table('user__settings')->update([
-            "id" => $setting['id'],
-            "mute" => !($setting['mute'] != 0),
-        ]);
+        DB::table('user__settings')
+            ->where('id', $setting['id'])
+            ->update(["mute" => !($setting['mute'] != 0)]);
 
         $this->reply("Changed");
     }
@@ -249,10 +253,9 @@ class Handler extends WebhookHandler
             return;
         }
 
-        DB::table('user__settings')->update([
-            "id" => $setting['id'],
-            "changeNotify" => !($setting['changeNotify'] != 0),
-        ]);
+        DB::table('user__settings')
+            ->where('id', $setting['id'])
+            ->update(["changeNotify" => !($setting['changeNotify'] != 0)]);
 
         $this->reply("Changed");
     }
@@ -305,6 +308,7 @@ class Handler extends WebhookHandler
             "changeNotify" => $lastSetting['changeNotify'],
             "mute" => $lastSetting['mute'],
 
+            "notified" => false,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);
