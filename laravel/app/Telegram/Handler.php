@@ -32,6 +32,19 @@ class Handler extends WebhookHandler
 
         return $user_id;
     }
+    private function get_last_setting()
+    {
+        $setting = $this->chat->storage()->get('lastSetting');
+        if ($setting == null) {
+            Telegraph::message(
+                "Sorry, bot lost your deleted setting"
+            )->send();
+
+            return null;
+        }
+
+        return $setting;
+    }
 
     public function start(): void
     {
@@ -44,10 +57,10 @@ class Handler extends WebhookHandler
             'change_setting' => 'Change your existing setting',
         ])->send();
 
-        $user_id = $this->chat->storage()->get('user_id');
-        if ($user_id != null) {
-            return;
-        }
+//        $user_id = $this->chat->storage()->get('user_id');
+//        if ($user_id != null) {
+//            return;
+//        }
 
         $chat_id = $this->chat->chat_id;
         $tg_user = DB::table('tgUsers')->where('tg_id', $chat_id)->first();
@@ -98,27 +111,33 @@ class Handler extends WebhookHandler
             return;
         }
 
-        $city_id = DB::table('cities')->where('cityName', $parsed_cmd[0])->first()->id;
-        if ($city_id == null) {
+        $city = DB::table('cities')->where('cityName', $parsed_cmd[0])->first();
+        if ($city == null) {
             Telegraph::message(
                 "Your city not supported"
             )->send();
             return;
         }
+        $city_id = $city->id;
+        $city_name = $city->cityName;
 
-        $id = DB::table('settings')->insertGetId([
-            "notifyTime" => (count($parsed_cmd) > 1) ? date("H:i:s", strtotime($parsed_cmd[1])) : date("H:i:s", strtotime("12:00:00")),
-            "changeNotify" => (count($parsed_cmd) > 2) ? $parsed_cmd[2] : true,
-            "mute" => (count($parsed_cmd) > 3) ? $parsed_cmd[4] : false,
+        $check = DB::table('user__settings')->where('city_id', $city_id)->first();
 
-            'created_at' => Carbon::now(),
-            'updated_at' => Carbon::now(),
-        ]);
+        if ($check != null) {
+            Telegraph::message(
+                "You already have setting for this city, you must change it"
+            )->send();
+
+            return;
+        }
 
         DB::table('user__settings')->insertGetId([
             "user_id" => $user_id,
             "city_id" => $city_id,
-            "setting_id" => $id,
+            "cityName" => $city_name,
+            "notifyTime" => (count($parsed_cmd) > 1) ? date("H:i:s", strtotime($parsed_cmd[1])) : date("H:i:s", strtotime("12:00:00")),
+            "changeNotify" => (count($parsed_cmd) > 2) ? $parsed_cmd[2] : true,
+            "mute" => (count($parsed_cmd) > 3) ? $parsed_cmd[3] : false,
 
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -149,14 +168,22 @@ class Handler extends WebhookHandler
         $settings = DB::table('user__settings')->where('user_id', $user_id)->get();
 
         if (count($settings) != 0) {
+            $buttons = array();
+            $i = 1;
             $msg = "Your settings:\n\n";
+
+            foreach ($settings as &$value) {
+                $msg .= $i . '. ' . $value->cityName . ' ' . $value->notifyTime . ' ' .
+                    ($value->changeNotify ? "notifyAlways" : "noNotify") . ' ' .
+                    ($value->mute ? "muted" : "unmuted") . "\n";
+                $i += 1;
+                $buttons[] = Button::make($value->cityName)->action('menu')->param('id', $value->id);
+            }
 
             Telegraph::message(
                 $msg
             )->keyboard(
-                Keyboard::make()->buttons([
-                    Button::make("1️⃣")->action('menu')->param('choose', 1),
-                ])
+                Keyboard::make()->buttons($buttons)
             )->send();
 
             return;
@@ -166,56 +193,118 @@ class Handler extends WebhookHandler
             "You don\`t have any settings yet"
         )->send();
     }
-    public function menu(int $choose): void
+    public function menu(mixed $id): void
     {
+        $setting = DB::table('user__settings')->find($id);
+        $this->chat->storage()->set('lastSetting', $setting);
+
         Telegraph::message(
             "Current setting:\n\n" .
             "\tZelenograd 12:00 notified unmuted"
         )->keyboard(
             Keyboard::make()->buttons([
-                Button::make("✍ change")->action('change')->param('id', $choose),
-                Button::make("❌ delete")->action('delete')->param('id', $choose),
+                Button::make("✍ change")->action('change'),
+                Button::make("❌ delete")->action('delete'),
             ])
         )->send();
     }
 
-    public function change(int $id): void
+    public function change(): void
     {
+        $setting = $this->get_last_setting();
+        if ($setting == null) {
+            return;
+        }
+
         Telegraph::message(
             "Select what you are want to change"
         )->keyboard(
             Keyboard::make()->buttons([
-                Button::make("🏢 City")->action('change_city')->param('id', $id),
-                Button::make("🕒 Time")->action('change_time')->param('id', $id),
+                Button::make("🏢 City")->action('change_city'),
+                Button::make("🕒 Time")->action('change_time'),
+                Button::make($setting['changeNotify'] ? "No Notify" : "Notify")->action('change_notify'),
+                Button::make($setting['changeNotify'] ? "Unmute" : "Mute")->action('change_mute'),
             ])
         )->send();
     }
 
-    public function change_city(int $id): void
+    public function change_mute()
+    {
+        $setting = $this->get_last_setting();
+        if ($setting == null) {
+            return;
+        }
+
+        DB::table('user__settings')->update([
+            "id" => $setting['id'],
+            "mute" => ($setting['mute'] != 0 ? false : true),
+        ]);
+    }
+    public function change_notify()
+    {
+        $setting = $this->get_last_setting();
+        if ($setting == null) {
+            return;
+        }
+
+        DB::table('user__settings')->update([
+            "id" => $setting['id'],
+            "changeNotify" => ($setting['changeNotify'] != 0 ? false : true),
+        ]);
+    }
+    public function change_city(): void
     {
         $this->chat->storage()->set('cityStartChange', true);
         $this->reply("Send city in new message:");
     }
 
-    public function change_time(int $id): void
+    public function change_time(): void
     {
         $this->chat->storage()->set('timeStartChange', true);
         $this->reply("Send time in new message:");
     }
 
-    public function delete(int $id): void
+    public function delete(): void
     {
+        $setting = $this->get_last_setting();
+        if ($setting == null) {
+            return;
+        }
+
+        DB::table('user__settings')->delete($setting['id']);
+
         Telegraph::message(
-            "Setting was successfully deleted"
+            "Setting was deleted"
         )->keyboard(
             Keyboard::make()->buttons([
-                Button::make("↩️ Cancel")->action('cancel')->param('id', $id),
+                Button::make("↩️ Cancel")->action('cancel'),
             ])
         )->send();
     }
 
-    public function cancel(int $id): void
+    public function cancel(): void
     {
+        $lastSetting = $this->chat->storage()->get('lastSetting');
+        if ($lastSetting == null) {
+            Telegraph::message(
+                "Sorry, bot lost your deleted setting"
+            )->send();
+
+            return;
+        }
+
+        DB::table('user__settings')->insertGetId([
+            "user_id" => $lastSetting['user_id'],
+            "city_id" => $lastSetting['city_id'],
+            "cityName" => $lastSetting['cityName'],
+            "notifyTime" => $lastSetting['notifyTime'],
+            "changeNotify" => $lastSetting['changeNotify'],
+            "mute" => $lastSetting['mute'],
+
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
         Telegraph::message(
             "Canceled"
         )->send();

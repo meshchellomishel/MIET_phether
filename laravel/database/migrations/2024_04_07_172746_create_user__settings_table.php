@@ -15,10 +15,12 @@ return new class extends Migration
             $table->BigIncrements('id');
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('city_id');
-            $table->unsignedBigInteger('setting_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('city_id')->references('id')->on('cities')->onDelete('cascade');
-            $table->foreign('setting_id')->references('id')->on('settings')->onDelete('cascade');
+            $table->string('cityName');
+            $table->time('notifyTime');
+            $table->boolean('changeNotify');
+            $table->boolean('mute');
             $table->timestamps();
         });
     }
