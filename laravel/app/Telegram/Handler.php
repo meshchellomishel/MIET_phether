@@ -3,16 +3,36 @@
 namespace App\Telegram;
 
 use AllowDynamicProperties;
+use App\Setting;
+use App\tg_User;
+use App\User;
+use Carbon\Carbon;
 use DefStudio\Telegraph\Facades\Telegraph;
 use DefStudio\Telegraph\Handlers\WebhookHandler;
 use DefStudio\Telegraph\Keyboard\Button;
 use DefStudio\Telegraph\Keyboard\Keyboard;
 use DefStudio\Telegraph\Models\TelegraphBot;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use \Illuminate\Support\Stringable;
 
 class Handler extends WebhookHandler
 {
+    private function get_current_user_id(): int
+    {
+        $user_id = $this->chat->storage()->get('user_id');
+        if ($user_id == null) {
+            $chat_id = $this->chat->chat_id;
+            $user_id = DB::table('tgUsers')->where('tg_id', $chat_id)->first()->user_id;
+        }
+
+        if ($user_id == null) {
+            return -1;
+        }
+
+        return $user_id;
+    }
+
     public function start(): void
     {
         $this->reply('Welcome to Phether!');
@@ -23,6 +43,32 @@ class Handler extends WebhookHandler
             'new_setting' => 'Add new setting',
             'change_setting' => 'Change your existing setting',
         ])->send();
+
+        $user_id = $this->chat->storage()->get('user_id');
+        if ($user_id != null) {
+            return;
+        }
+
+        $chat_id = $this->chat->chat_id;
+        $tg_user = DB::table('tgUsers')->where('tg_id', $chat_id)->first();
+        if ($tg_user != null) {
+            return;
+        }
+
+        $user_id = DB::table('users')->insertGetId([
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        DB::table('tgUsers')->insertGetId([
+            'user_id' => $user_id,
+            'tg_id' => $chat_id,
+
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        $this->chat->storage()->set('user_id', $user_id);
     }
 
     public function help(): void
@@ -36,11 +82,49 @@ class Handler extends WebhookHandler
     }
     public function new_setting(string $cmd): void
     {
+        $user_id = $this->get_current_user_id();
+        if ($user_id == -1) {
+            Telegraph::message(
+                "[ERROR]: Cannot find user id"
+            )->send();
+            return;
+        }
+
         $parsed_cmd = explode(' ', $cmd);
+        if (count($parsed_cmd) == 0) {
+            Telegraph::message(
+                "Please add arguments to your command"
+            )->send();
+            return;
+        }
 
-        $text = "Your command: \n\n" . implode(' ', $parsed_cmd);
+        $city_id = DB::table('cities')->where('cityName', $parsed_cmd[0])->first()->id;
+        if ($city_id == null) {
+            Telegraph::message(
+                "Your city not supported"
+            )->send();
+            return;
+        }
 
-        $this->reply($text);
+        $id = DB::table('settings')->insertGetId([
+            "notifyTime" => (count($parsed_cmd) > 1) ? date("H:i:s", strtotime($parsed_cmd[1])) : date("H:i:s", strtotime("12:00:00")),
+            "changeNotify" => (count($parsed_cmd) > 2) ? $parsed_cmd[2] : true,
+            "mute" => (count($parsed_cmd) > 3) ? $parsed_cmd[4] : false,
+
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        DB::table('user__settings')->insertGetId([
+            "user_id" => $user_id,
+            "city_id" => $city_id,
+            "setting_id" => $id,
+
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        $this->reply("Setting created successfully");
     }
 
     public function change_setting(string $cmd): void
@@ -54,13 +138,32 @@ class Handler extends WebhookHandler
 
     public function show_settings(): void
     {
+        $user_id = $this->get_current_user_id();
+        if ($user_id == -1) {
+            Telegraph::message(
+                "[ERROR]: Cannot find user id"
+            )->send();
+            return;
+        }
+
+        $settings = DB::table('user__settings')->where('user_id', $user_id)->get();
+
+        if (count($settings) != 0) {
+            $msg = "Your settings:\n\n";
+
+            Telegraph::message(
+                $msg
+            )->keyboard(
+                Keyboard::make()->buttons([
+                    Button::make("1️⃣")->action('menu')->param('choose', 1),
+                ])
+            )->send();
+
+            return;
+        }
+
         Telegraph::message(
-            "Your settings:\n\n" .
-            "*1.* Zelenograd 12:00 notified unmuted"
-        )->keyboard(
-            Keyboard::make()->buttons([
-                Button::make("1️⃣")->action('menu')->param('choose', 1),
-            ])
+            "You don\`t have any settings yet"
         )->send();
     }
     public function menu(int $choose): void
@@ -82,8 +185,8 @@ class Handler extends WebhookHandler
             "Select what you are want to change"
         )->keyboard(
             Keyboard::make()->buttons([
-                Button::make("City")->action('change_city')->param('id', $id),
-                Button::make("Time")->action('change_time')->param('id', $id),
+                Button::make("🏢 City")->action('change_city')->param('id', $id),
+                Button::make("🕒 Time")->action('change_time')->param('id', $id),
             ])
         )->send();
     }

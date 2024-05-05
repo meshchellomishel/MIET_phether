@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tgUsers', function (Blueprint $table) {
+            $table->BigIncrements('id');
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('tg_id');
+            $table->string('tg_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('tg_id')->references('id')->on('telegraph_chats')->onDelete('cascade');
             $table->timestamps();
         });
     }
