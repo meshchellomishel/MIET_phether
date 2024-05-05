@@ -133,7 +133,7 @@ class Handler extends WebhookHandler
         $timeStarted = $this->chat->storage()->get('timeStartChange');
         $cityStarted = $this->chat->storage()->get('cityStartChange');
 
-        Log::debug('[TELEGRAM]: Received message: (' . ($timeStarted ? "true" : "false") . ', ' . ($cityStarted ? "true" : "false") . '): ' . json_encode($this->message->toArray(), JSON_UNESCAPED_UNICODE));
+        Log::debug('[TELEGRAM]: Received message: ' . json_encode($this->message->toArray(), JSON_UNESCAPED_UNICODE));
         if ($cityStarted) {
             Telegraph::message("Received city " . $text)->send();
             $this->chat->storage()->set('cityStartChange', false);
