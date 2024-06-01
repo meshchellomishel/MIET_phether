@@ -23,6 +23,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command(
+            "app:clear-users"
+        )->everyMinute();
+
+        $schedule->command(
             "app:notify-users"
         )->everyMinute();
 //        $schedule->call(function () {

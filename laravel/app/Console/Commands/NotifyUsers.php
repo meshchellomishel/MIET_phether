@@ -68,10 +68,11 @@ class NotifyUsers extends Command
                 if ($user->notified && !$weth->weather_changed)
                     continue;
                 else if ($weth->weather_changed &&
-                        Carbon::parse($weth->time, $userTimeZone)->gt($now)) {
+                        Carbon::parse($weth->time, $userTimeZone)->gt($now))
                     $weather_changed = true;
+
+                if ($weth->weather_changed)
                     $changed_ids []= $weth->id;
-                }
 
                 $message .= (
                     $weth->time . "\t\t\t\t" . $weth->temp . "\t\t\t\t\t" . $weth->mm . "\n"
@@ -79,8 +80,8 @@ class NotifyUsers extends Command
             }
             if ($message == "" ||
                 ($need_skip_by_diff && !$weather_changed))
-                return;
-            if ($weather_changed)
+                goto clean;
+            if ($weather_changed && !$user->notified)
                 $changed = "***Changed***";
 
             $message = (
@@ -99,6 +100,7 @@ class NotifyUsers extends Command
                     'updated_at' => Carbon::now()
                 ]);
 
+            clean:
             foreach ($changed_ids as &$id) {
                 DB::table('weatherStatus')
                     ->where('id', '=', $id)
