@@ -17,12 +17,13 @@ return new class extends Migration
             $table->unsignedBigInteger('city_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('city_id')->references('id')->on('cities')->onDelete('cascade');
-            $table->string('cityName');
-            $table->time('notifyTime');
-            $table->boolean('changeNotify');
+            $table->string('city_name');
+            $table->time('notify_time');
+            $table->boolean('change_notify');
             $table->boolean('mute');
 
             $table->boolean('notified');
+            $table->boolean('must_update');
             $table->timestamps();
         });
     }

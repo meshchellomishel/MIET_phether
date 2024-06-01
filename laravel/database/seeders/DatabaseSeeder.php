@@ -17,21 +17,21 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         DB::table('cities')->insert([
-            'cityName' => 'Zelenograd',
+            'city_name' => 'Zelenograd',
 
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);
 
         DB::table('cities')->insert([
-            'cityName' => 'Moscow',
+            'city_name' => 'Moscow',
 
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);
 
         DB::table('cities')->insert([
-            'cityName' => 'Sochi',
+            'city_name' => 'Sochi',
 
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -40,6 +40,26 @@ class DatabaseSeeder extends Seeder
         DB::table('telegraph_bots')->insert([
             'token' => '6903896292:AAFwThz4Eq0-8CivFqsKf9dOpTozPUkFNZE',
             'name' => 'Phether',
+
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        DB::table('weatherStatus')->insert([
+            'city' => 'Zelenograd',
+            'temp' => '38.5',
+            'time' => '12:00',
+            'mm' => '0.5',
+
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        DB::table('weatherStatus')->insert([
+            'city' => 'Sochi',
+            'temp' => '38.5',
+            'time' => '12:00',
+            'mm' => '0.5',
 
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

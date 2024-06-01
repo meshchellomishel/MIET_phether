@@ -34,8 +34,8 @@ class Handler extends WebhookHandler
     }
     private function get_setting_string(\stdClass $value)
     {
-        return $value->cityName . ' ' . $value->notifyTime . ' ' .
-        ($value->changeNotify ? "🔔notify" : "🔕noNotify") . ' ' .
+        return $value->city_name . ' ' . $value->notify_time . ' ' .
+        ($value->change_notify ? "🔔notify" : "🔕noNotify") . ' ' .
         ($value->mute ? "🔕muted" : "🔊unmuted") . "\n";
     }
     private function get_last_setting()
@@ -117,7 +117,7 @@ class Handler extends WebhookHandler
             return;
         }
 
-        $city = DB::table('cities')->where('cityName', $parsed_cmd[0])->first();
+        $city = DB::table('cities')->where('city_name', $parsed_cmd[0])->first();
         if ($city == null) {
             Telegraph::message(
                 "Your city not supported"
@@ -125,7 +125,7 @@ class Handler extends WebhookHandler
             return;
         }
         $city_id = $city->id;
-        $city_name = $city->cityName;
+        $city_name = $city->city_name;
 
         $check = DB::table('user__settings')->where('city_id', $city_id)->first();
 
@@ -140,11 +140,12 @@ class Handler extends WebhookHandler
         DB::table('user__settings')->insertGetId([
             "user_id" => $user_id,
             "city_id" => $city_id,
-            "cityName" => $city_name,
-            "notifyTime" => (count($parsed_cmd) > 1) ? date("H:i:s", strtotime($parsed_cmd[1])) : date("H:i:s", strtotime("12:00:00")),
-            "changeNotify" => (count($parsed_cmd) > 2) ? $parsed_cmd[2] : true,
+            "city_name" => $city_name,
+            "notify_time" => (count($parsed_cmd) > 1) ? date("H:i:s", strtotime($parsed_cmd[1])) : date("H:i:s", strtotime("12:00:00")),
+            "change_notify" => (count($parsed_cmd) > 2) ? $parsed_cmd[2] : true,
             "mute" => (count($parsed_cmd) > 3) ? $parsed_cmd[3] : false,
 
+            "must_update" => false,
             "notified" => false,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
@@ -182,7 +183,7 @@ class Handler extends WebhookHandler
             foreach ($settings as &$value) {
                 $msg .= $i . '. ' . $this->get_setting_string($value);
                 $i += 1;
-                $buttons[] = Button::make($value->cityName)->action('menu')->param('id', $value->id);
+                $buttons[] = Button::make($value->city_name)->action('menu')->param('id', $value->id);
             }
 
             Telegraph::message(
@@ -227,8 +228,8 @@ class Handler extends WebhookHandler
             Keyboard::make()->buttons([
                 Button::make("🏢 City")->action('change_city'),
                 Button::make("🕒 Time")->action('change_time'),
-                Button::make($setting['changeNotify'] ? "🔕 No Notify" : "🔔 Notify")->action('change_notify'),
-                Button::make($setting['changeNotify'] ? "🔊 Unmute" : "🔇 Mute")->action('change_mute'),
+                Button::make($setting['change_notify'] ? "🔕 No Notify" : "🔔 Notify")->action('change_notify'),
+                Button::make($setting['change_notify'] ? "🔊 Unmute" : "🔇 Mute")->action('change_mute'),
             ])
         )->send();
     }
@@ -242,7 +243,11 @@ class Handler extends WebhookHandler
 
         DB::table('user__settings')
             ->where('id', $setting['id'])
-            ->update(["mute" => !($setting['mute'] != 0)]);
+            ->update([
+                "mute" => !($setting['mute'] != 0),
+
+                'updated_at' => Carbon::now()
+            ]);
 
         $this->reply("Changed");
     }
@@ -255,7 +260,11 @@ class Handler extends WebhookHandler
 
         DB::table('user__settings')
             ->where('id', $setting['id'])
-            ->update(["changeNotify" => !($setting['changeNotify'] != 0)]);
+            ->update([
+                "change_notify" => !($setting['change_notify'] != 0),
+
+                'updated_at' => Carbon::now()
+            ]);
 
         $this->reply("Changed");
     }
@@ -303,9 +312,9 @@ class Handler extends WebhookHandler
         DB::table('user__settings')->insertGetId([
             "user_id" => $lastSetting['user_id'],
             "city_id" => $lastSetting['city_id'],
-            "cityName" => $lastSetting['cityName'],
-            "notifyTime" => $lastSetting['notifyTime'],
-            "changeNotify" => $lastSetting['changeNotify'],
+            "city_name" => $lastSetting['city_name'],
+            "notify_time" => $lastSetting['notify_time'],
+            "change_notify" => $lastSetting['change_notify'],
             "mute" => $lastSetting['mute'],
 
             "notified" => false,
@@ -332,14 +341,49 @@ class Handler extends WebhookHandler
     {
         $timeStarted = $this->chat->storage()->get('timeStartChange');
         $cityStarted = $this->chat->storage()->get('cityStartChange');
+        if ($text == 'cancel') {
+            $this->chat->storage()->set('timeStartChange', false);
+            $this->chat->storage()->set('cityStartChange', false);
+            return;
+        }
+
+        $lastSetting = $this->chat->storage()->get('lastSetting');
 
         Log::debug('[TELEGRAM]: Received message: ' . json_encode($this->message->toArray(), JSON_UNESCAPED_UNICODE));
         if ($cityStarted) {
-            Telegraph::message("Received city " . $text)->send();
+            $city = DB::table('cities')->where('city_name', $text)->first();
+            if ($city == null) {
+                Telegraph::message(
+                    "Your city not supported"
+                )->send();
+                return;
+            }
+
+            DB::table('user__settings')
+                ->where('user_id', '=', $lastSetting['user_id'])
+                ->where('city_name', '=', $lastSetting['city_name'])
+                ->update([
+                    "city_name" => $text,
+                    'notified' => false,
+
+                    'updated_at' => Carbon::now()
+                ]);
+
+            Telegraph::message("City was updated on " . $text)->send();
             $this->chat->storage()->set('cityStartChange', false);
         }
         if ($timeStarted) {
-            Telegraph::message("Received time " . $text)->send();
+            DB::table('user__settings')
+                ->where('user_id', '=', $lastSetting['user_id'])
+                ->where('city_name', '=', $lastSetting['city_name'])
+                ->update([
+                    "notify_time" => date("H:i:s", strtotime($text)),
+                    'notified' => false,
+
+                    'updated_at' => Carbon::now()
+                ]);
+
+            Telegraph::message("Time was updated on " . $text)->send();
             $this->chat->storage()->set('timeStartChange', false);
         }
     }

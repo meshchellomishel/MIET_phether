@@ -22,12 +22,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-//        $schedule->call(
-//            function() {
-//
-//            }
-//        )->everyMinute();
-
+        $schedule->command(
+            "app:notify-users"
+        )->everyMinute();
 //        $schedule->call(function () {
 //            $users = DB::table('user__settings')
 //                ->where('mute', '=', false)
