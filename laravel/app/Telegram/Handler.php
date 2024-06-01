@@ -145,7 +145,6 @@ class Handler extends WebhookHandler
             "change_notify" => (count($parsed_cmd) > 2) ? $parsed_cmd[2] : true,
             "mute" => (count($parsed_cmd) > 3) ? $parsed_cmd[3] : false,
 
-            "must_update" => false,
             "notified" => false,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

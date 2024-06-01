@@ -57,9 +57,9 @@ class DatabaseSeeder extends Seeder
 
         DB::table('weatherStatus')->insert([
             'city' => 'Sochi',
-            'temp' => '38.5',
+            'temp' => '-1.5',
             'time' => '12:00',
-            'mm' => '0.5',
+            'mm' => '12.5',
 
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

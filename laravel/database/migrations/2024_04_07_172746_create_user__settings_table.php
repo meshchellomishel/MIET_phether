@@ -23,7 +23,6 @@ return new class extends Migration
             $table->boolean('mute');
 
             $table->boolean('notified');
-            $table->boolean('must_update');
             $table->timestamps();
         });
     }

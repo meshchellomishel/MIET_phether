@@ -17,6 +17,8 @@ return new class extends Migration
             $table->float('temp');
             $table->time('time');
             $table->float('mm');
+            $table->boolean('weather_changed')->default(false);
+
             $table->timestamps();
         });
     }

@@ -56,11 +56,19 @@ class WeatherController
                 ]);
 
             } else {
+                if ($temp->temp == $request['temp'] &&
+                    $temp->mm == $request['mm'])
+                    return Response::json([
+                        'code' => 200,
+                        'message' => 'ok'
+                    ]);
+
                 DB::table('weatherStatus')
                     ->where('id', $temp->id)
                     ->update([
                     'temp' => $request['temp'],
                     'mm' => $request['mm'],
+                    'weather_changed' => true,
 
                     'updated_at' => Carbon::now(),
                 ]);
