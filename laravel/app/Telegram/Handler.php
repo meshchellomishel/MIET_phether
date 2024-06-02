@@ -136,7 +136,6 @@ class Handler extends WebhookHandler
             'help' => 'Show functional',
             'show_settings' => 'Show your setting',
             'new_setting' => 'Add new setting',
-            'change_setting' => 'Change your existing setting',
         ])->send();
 
 //        $user_id = $this->chat->storage()->get('user_id');
@@ -172,7 +171,11 @@ class Handler extends WebhookHandler
             "*Phether* notify about weather:\n\n" .
             "- You can set time when bot should send weather for your city list to you\n" .
             "- Parameter *notify* mean that bot should notify you when weather going to change a lot\n" .
-            "- Parameter *mute* mean that you don\`t want to be notified by this setting"
+            "- Parameter *mute* mean that you don\`t want to be notified by this setting" .
+
+            "\n\n" .
+            "/new_setting {Country},{State},{City} {time}\n" .
+            "/show_settings"
         );
     }
     public function new_setting(string $cmd): void
