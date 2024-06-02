@@ -110,9 +110,9 @@ class Handler extends WebhookHandler
     private function get_setting_string(\stdClass $value)
     {
         return $value->country . ',' . $value->state  . ',' .
-            $value->city_name . ' ' . $value->notify_time . ' '; /*.
+            $value->city_name . ' ' . $value->notify_time . ' ' /*.
         ($value->change_notify ? "🔔notify" : "🔕noNotify") . ' ' .
-        ($value->mute ? "🔕muted" : "🔊unmuted") . "\n";*/
+        ($value->mute ? "🔕muted" : "🔊unmuted")*/ . "\n";
     }
     private function get_last_setting()
     {
@@ -309,8 +309,8 @@ class Handler extends WebhookHandler
             Keyboard::make()->buttons([
                 Button::make("🏢 City")->action('change_city'),
                 Button::make("🕒 Time")->action('change_time'),
-                Button::make($setting['change_notify'] ? "🔕 No Notify" : "🔔 Notify")->action('change_notify'),
-                Button::make($setting['change_notify'] ? "🔊 Unmute" : "🔇 Mute")->action('change_mute'),
+                // Button::make($setting['change_notify'] ? "🔕 No Notify" : "🔔 Notify")->action('change_notify'),
+                // Button::make($setting['change_notify'] ? "🔊 Unmute" : "🔇 Mute")->action('change_mute'),
             ])
         )->send();
     }
