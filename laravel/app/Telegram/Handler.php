@@ -21,6 +21,40 @@ use \Illuminate\Support\Stringable;
 
 class Handler extends WebhookHandler
 {
+    private function is_city_setting_exist($city_id)
+    {
+        $check = DB::table('user__settings')->where('city_id', $city_id)->first();
+
+        if ($check != null) {
+            Telegraph::message(
+                "You already have setting for this city, you must change it"
+            )->send();
+
+            return true;
+        }
+        return false;
+    }
+    private function parse_city($parsed_cmd)
+    {
+        $city_data = City::parse_city($parsed_cmd);
+        if ($city_data == null) {
+            Telegraph::message(
+                "Please try another command"
+            )->send();
+            return null;
+        }
+        $api_key = env('CITY_API_KEY');
+        $response = City::get_from_API($city_data, $api_key);
+        info($response);
+        if (count($response) == 0 || $response[0] == null) {
+            Telegraph::message(
+                "Your city not supported"
+            )->send();
+            return null;
+        }
+
+        return $response[0];
+    }
     private function get_setting_by_id($id)
     {
         return DB::table('user__settings')
@@ -135,25 +169,10 @@ class Handler extends WebhookHandler
             return;
         }
 
-        $city_data = City::parse_city($parsed_cmd[0]);
-        if ($city_data == null) {
-            Telegraph::message(
-                "Please try another command"
-            )->send();
-            return;
-        }
-        $api_key = env('CITY_API_KEY');
-        $response = City::get_from_API($city_data, $api_key);
-        info($response);
-        if (count($response) == 0 || $response[0] == null) {
-            Telegraph::message(
-                "Your city not supported"
-            )->send();
-            return;
-        }
-        $city_name = $response[0]['name'];
-        $city_state = $response[0]['state'];
-        $city_country = $response[0]['country'];
+        $city_data = $this::parse_city($parsed_cmd[0]);
+        $city_name = $city_data['name'];
+        $city_state = $city_data['state'];
+        $city_country = $city_data['country'];
 
         $city = DB::table('cities')
             ->where('city_name', $city_name)
@@ -162,11 +181,11 @@ class Handler extends WebhookHandler
             ->first();
         if ($city == null) {
             $id = DB::table('cities')->insertGetId([
-                'city_name' => $response[0]['name'],
-                'state' => $response[0]['state'],
-                'country' => $response[0]['country'],
-                'longitude' => $response[0]['longitude'],
-                'latitude' => $response[0]['latitude'],
+                'city_name' => $city_data['name'],
+                'state' => $city_data['state'],
+                'country' => $city_data['country'],
+                'longitude' => $city_data['longitude'],
+                'latitude' => $city_data['latitude'],
 
 
                 'created_at' => Carbon::now(),
@@ -179,15 +198,8 @@ class Handler extends WebhookHandler
         $city_id = $city->id;
         $city_name = $city->city_name;
 
-        $check = DB::table('user__settings')->where('city_id', $city_id)->first();
-
-        if ($check != null) {
-            Telegraph::message(
-                "You already have setting for this city, you must change it"
-            )->send();
-
+        if ($this::is_city_setting_exist($city_id))
             return;
-        }
 
         DB::table('user__settings')->insertGetId([
             "user_id" => $user_id,
@@ -402,18 +414,52 @@ class Handler extends WebhookHandler
 
         Log::debug('[TELEGRAM]: Received message: ' . json_encode($this->message->toArray(), JSON_UNESCAPED_UNICODE));
         if ($cityStarted) {
-            $city = DB::table('cities')->where('city_name', $text)->first();
-            if ($city == null) {
+            $city_data = $this::parse_city($text);
+            if ($city_data == null) {
                 Telegraph::message(
                     "Your city not supported"
                 )->send();
                 return;
             }
+            $city_name = $city_data['name'];
+            $city_state = $city_data['state'];
+            $city_country = $city_data['country'];
+
+            $city = DB::table('cities')
+                ->where('city_name', '=', $city_name)
+                ->where('state', '=', $city_state)
+                ->where('country', '=', $city_country)
+                ->first();
+            if ($city == null) {
+                $id = DB::table('cities')->insertGetId([
+                    'city_name' => $city_data['name'],
+                    'state' => $city_data['state'],
+                    'country' => $city_data['country'],
+                    'longitude' => $city_data['longitude'],
+                    'latitude' => $city_data['latitude'],
+
+
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ]);
+            } else
+                $id = $city->id;
+
+            if ($lastSetting['city_id'] == $id) {
+                Telegraph::message(
+                    "This actually the same city"
+                )->send();
+                return;
+            }
+
+            if ($this::is_city_setting_exist($id))
+                return;
 
             DB::table('user__settings')
                 ->where('user_id', '=', $lastSetting['user_id'])
                 ->where('city_name', '=', $lastSetting['city_name'])
                 ->update([
+                    'city_id' => $id,
                     "city_name" => $text,
                     'notified' => false,
 
