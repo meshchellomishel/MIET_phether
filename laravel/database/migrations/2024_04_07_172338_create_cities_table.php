@@ -14,6 +14,11 @@ return new class extends Migration
         Schema::create('cities', function (Blueprint $table) {
             $table->BigIncrements('id');
             $table->string('city_name');
+            $table->string('state');
+            $table->string('country');
+
+            $table->double('longitude');
+            $table->double('latitude');
 
             $table->timestamps();
         });

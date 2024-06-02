@@ -12,7 +12,9 @@ use DefStudio\Telegraph\Handlers\WebhookHandler;
 use DefStudio\Telegraph\Keyboard\Button;
 use DefStudio\Telegraph\Keyboard\Keyboard;
 use DefStudio\Telegraph\Models\TelegraphBot;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use \Illuminate\Support\Stringable;
 
@@ -110,20 +112,67 @@ class Handler extends WebhookHandler
         }
 
         $parsed_cmd = explode(' ', $cmd);
-        if (count($parsed_cmd) == 0) {
+        if (count($parsed_cmd) > 4) {
             Telegraph::message(
                 "Please add arguments to your command"
             )->send();
             return;
         }
 
-        $city = DB::table('cities')->where('city_name', $parsed_cmd[0])->first();
-        if ($city == null) {
+        $city_data = explode(',', $parsed_cmd[0]);
+        if (count($city_data) > 3) {
             Telegraph::message(
-                "Your city not supported"
+                "Please try again with different command"
             )->send();
             return;
         }
+
+        $city_name = "";
+        $city_state = "";
+        $city_country = "";
+        if (count($city_data) == 1) {
+            $city_name = $city_data[0];
+        } else if (count($city_data) == 2) {
+            $city_state = $city_data[0];
+            $city_name = $city_data[1];
+        } else if (count($city_data) == 3) {
+            $city_country = $city_data[0];
+            $city_state = $city_data[1];
+            $city_name = $city_data[2];
+        }
+
+        $city = DB::table('cities')->where('city_name', $city_name)->first();
+        if ($city == null) {
+            $api_key = env('CITY_API_KEY');
+
+            $response = Http::withHeaders([
+                'X-Api-Key' => $api_key
+            ])->get('https://api.api-ninjas.com/v1/geocoding',[
+                'city' => $city_name,
+                'state' => $city_state,
+                'country' => $city_country,
+            ])->json();
+
+            if (count($response) == 0 || $response[0] == null) {
+                Telegraph::message(
+                    "Your city not supported"
+                )->send();
+                return;
+            }
+
+            DB::table('cities')->insertGetId([
+                    'city_name' => $response[0]['name'],
+                    'state' => $response[0]['state'],
+                    'country' => $response[0]['country'],
+                    'longitude' => $response[0]['longitude'],
+                    'latitude' => $response[0]['latitude'],
+
+
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+            ]);
+        }
+        $city = DB::table('cities')->where('city_name', $city_name)->first();
         $city_id = $city->id;
         $city_name = $city->city_name;
 
