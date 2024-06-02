@@ -110,9 +110,9 @@ class Handler extends WebhookHandler
     private function get_setting_string(\stdClass $value)
     {
         return $value->country . ',' . $value->state  . ',' .
-            $value->city_name . ' ' . $value->notify_time . ' ' .
+            $value->city_name . ' ' . $value->notify_time . ' '; /*.
         ($value->change_notify ? "🔔notify" : "🔕noNotify") . ' ' .
-        ($value->mute ? "🔕muted" : "🔊unmuted") . "\n";
+        ($value->mute ? "🔕muted" : "🔊unmuted") . "\n";*/
     }
     private function get_last_setting()
     {

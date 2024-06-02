@@ -32,8 +32,10 @@ class NotifyUsers extends Command
         $now = Carbon::now()->setTimezone('MSK');
         $users = DB::table('user__settings')
             ->select('tg_id', 'user__settings.city_id', 'user__settings.city_name',
+                'cities.state', 'cities.country',
                 'user__settings.notify_time AS time', 'user__settings.user_id AS user_id',
                 'user__settings.change_notify', 'notified')
+            ->join('cities', 'cities.id', '=', 'user__settings.city_id')
             ->join('tgUsers', 'tgUsers.id', '=', 'user__settings.user_id')
             ->where('user__settings.mute', '=', false)
 //            ->where('user__settings.notified', '=', false)
@@ -89,7 +91,7 @@ class NotifyUsers extends Command
                 $changed = "***Changed***";
 
             $message = (
-                "***" . $user->city_name . "***\n\n" .
+                "***".$user->country.','.$user->state.','.$user->city_name."***\n\n" .
                 "time       temp   mm\n" .
                 $message . "\n" . $changed
             );
