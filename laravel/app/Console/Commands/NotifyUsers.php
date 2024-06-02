@@ -63,6 +63,7 @@ class NotifyUsers extends Command
                 ->get();
 
             $weather = $weather->toArray();
+            info(end($weather)->id);
             $weather = [end($weather)];
             $message = "";
             $changed = "";

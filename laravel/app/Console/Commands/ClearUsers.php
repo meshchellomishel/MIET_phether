@@ -38,7 +38,6 @@ class ClearUsers extends Command
             ->update(['notified' => 'false']);
 
         DB::table('weatherStatus')
-            ->where('weather_changed', '=', 'true')
-            ->update(['weather_changed' => 'false']);
+            ->delete();
     }
 }

@@ -26,7 +26,7 @@ class Handler extends WebhookHandler
         info($city_data);
         $result = City::push_to_weather_service($city_data);
         if ($result == false) {
-            Telegraph::message(
+            $this->chat->message(
                 "Failed to push to weather-service"
             )->send();
             return null;
@@ -51,7 +51,7 @@ class Handler extends WebhookHandler
         $check = DB::table('user__settings')->where('city_id', $city_id)->first();
 
         if ($check != null) {
-            Telegraph::message(
+            $this->chat->message(
                 "You already have setting for this city, you must change it"
             )->send();
 
@@ -63,7 +63,7 @@ class Handler extends WebhookHandler
     {
         $city_data = City::parse_city($parsed_cmd);
         if ($city_data == null) {
-            Telegraph::message(
+            $this->chat->message(
                 "Please try another command"
             )->send();
             return null;
@@ -71,7 +71,7 @@ class Handler extends WebhookHandler
         $api_key = env('CITY_API_KEY');
         $response = City::get_from_API($city_data, $api_key);
         if (count($response) == 0 || $response[0] == null) {
-            Telegraph::message(
+            $this->chat->message(
                 "Your city not supported"
             )->send();
             return null;
@@ -118,7 +118,7 @@ class Handler extends WebhookHandler
     {
         $setting = $this->chat->storage()->get('lastSetting');
         if ($setting == null) {
-            Telegraph::message(
+            $this->chat->message(
                 "Sorry, bot lost your deleted setting"
             )->send();
 
@@ -179,7 +179,7 @@ class Handler extends WebhookHandler
     {
         $user_id = $this->get_current_user_id();
         if ($user_id == -1) {
-            Telegraph::message(
+            $this->chat->message(
                 "[ERROR]: Cannot find user id"
             )->send();
             return;
@@ -187,7 +187,7 @@ class Handler extends WebhookHandler
 
         $parsed_cmd = explode(' ', $cmd);
         if (count($parsed_cmd) > 4) {
-            Telegraph::message(
+            $this->chat->message(
                 "Please add arguments to your command"
             )->send();
             return;
@@ -248,7 +248,7 @@ class Handler extends WebhookHandler
     {
         $user_id = $this->get_current_user_id();
         if ($user_id == -1) {
-            Telegraph::message(
+            $this->chat->message(
                 "[ERROR]: Cannot find user id"
             )->send();
             return;
@@ -267,7 +267,7 @@ class Handler extends WebhookHandler
                 $buttons[] = Button::make($value->city_name)->action('menu')->param('id', $value->id);
             }
 
-            Telegraph::message(
+            $this->chat->message(
                 $msg
             )->keyboard(
                 Keyboard::make()->buttons($buttons)
@@ -275,7 +275,7 @@ class Handler extends WebhookHandler
             return;
         }
 
-        Telegraph::message(
+        $this->chat->message(
             "You don\`t have any settings yet"
         )->send();
     }
@@ -285,7 +285,7 @@ class Handler extends WebhookHandler
         $setting = $this::get_setting_by_id($id);
         $this->chat->storage()->set('lastSetting', $setting);
 
-        Telegraph::message(
+        $this->chat->message(
             "Current setting:\n\n" .
             $this->get_setting_string($setting)
         )->keyboard(
@@ -303,7 +303,7 @@ class Handler extends WebhookHandler
             return;
         }
 
-        Telegraph::message(
+        $this->chat->message(
             "Select what you are want to change"
         )->keyboard(
             Keyboard::make()->buttons([
@@ -370,7 +370,7 @@ class Handler extends WebhookHandler
 
         DB::table('user__settings')->delete($setting['id']);
 
-        Telegraph::message(
+        $this->chat->message(
             "Setting was deleted"
         )->keyboard(
             Keyboard::make()->buttons([
@@ -383,7 +383,7 @@ class Handler extends WebhookHandler
     {
         $lastSetting = $this->chat->storage()->get('lastSetting');
         if ($lastSetting == null) {
-            Telegraph::message(
+            $this->chat->message(
                 "Sorry, bot lost your deleted setting"
             )->send();
 
@@ -403,7 +403,7 @@ class Handler extends WebhookHandler
             'updated_at' => Carbon::now(),
         ]);
 
-        Telegraph::message(
+        $this->chat->message(
             "Canceled"
         )->send();
     }
@@ -453,7 +453,7 @@ class Handler extends WebhookHandler
                 $id = $city->id;
 
             if ($lastSetting['city_id'] == $id) {
-                Telegraph::message(
+                $this->chat->message(
                     "This actually the same city"
                 )->send();
                 return;
@@ -473,7 +473,7 @@ class Handler extends WebhookHandler
                     'updated_at' => Carbon::now(),
                 ]);
 
-            Telegraph::message("City was updated on " . $text)->send();
+            $this->chat->message("City was updated on " . $text)->send();
             $this->chat->storage()->set('cityStartChange', false);
         }
         if ($timeStarted) {
@@ -487,7 +487,7 @@ class Handler extends WebhookHandler
                     'updated_at' => Carbon::now(),
                 ]);
 
-            Telegraph::message("Time was updated on " . $text)->send();
+            $this->chat->message("Time was updated on " . $text)->send();
             $this->chat->storage()->set('timeStartChange', false);
         }
     }
