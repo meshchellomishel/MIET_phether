@@ -46,9 +46,11 @@ class Handler extends WebhookHandler
 
         return $id;
     }
-    private function is_city_setting_exist($city_id)
+    private function is_city_setting_exist($city_id, $user_id)
     {
-        $check = DB::table('user__settings')->where('city_id', $city_id)->first();
+        $check = DB::table('user__settings')
+            ->where('user_id', '=', $user_id)
+            ->where('city_id', $city_id)->first();
 
         if ($check != null) {
             $this->chat->message(
@@ -95,11 +97,9 @@ class Handler extends WebhookHandler
     }
     private function get_current_user_id(): int
     {
-        $user_id = $this->chat->storage()->get('user_id');
-        if ($user_id == null) {
-            $chat_id = $this->chat->chat_id;
-            $user_id = DB::table('tgUsers')->where('tg_id', $chat_id)->first()->user_id;
-        }
+        $chat_id = $this->chat->chat_id;
+        $user_id = DB::table('tgUsers')->where('tg_id', $chat_id)->first()->user_id;
+        info('user_id: ' . $user_id);
 
         if ($user_id == null) {
             return -1;
@@ -174,8 +174,8 @@ class Handler extends WebhookHandler
             "- Parameter *mute* mean that you don\`t want to be notified by this setting" .
 
             "\n\n" .
-            "/new_setting {Country},{State},{City} {time}\n" .
-            "/show_settings"
+            "new_setting {Country},{State},{City} {time}\n" .
+            "show_settings"
         );
     }
     public function new_setting(string $cmd): void
@@ -219,7 +219,7 @@ class Handler extends WebhookHandler
         $city_id = $city->id;
         $city_name = $city->city_name;
 
-        if ($this::is_city_setting_exist($city_id))
+        if ($this::is_city_setting_exist($city_id, $user_id))
             return;
 
         DB::table('user__settings')->insertGetId([
@@ -423,6 +423,13 @@ class Handler extends WebhookHandler
 
     protected function handleChatMessage(Stringable $text):void
     {
+        $user_id = $this->get_current_user_id();
+        if ($user_id == -1) {
+            $this->chat->message(
+                "[ERROR]: Cannot find user id"
+            )->send();
+            return;
+        }
         $timeStarted = $this->chat->storage()->get('timeStartChange');
         $cityStarted = $this->chat->storage()->get('cityStartChange');
         if ($text == 'cancel') {
@@ -462,7 +469,7 @@ class Handler extends WebhookHandler
                 return;
             }
 
-            if ($this::is_city_setting_exist($id))
+            if ($this::is_city_setting_exist($id, $user_id))
                 return;
 
             DB::table('user__settings')

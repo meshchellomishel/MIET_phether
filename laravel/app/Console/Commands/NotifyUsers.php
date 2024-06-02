@@ -64,8 +64,11 @@ class NotifyUsers extends Command
                 ->where('city_id', '=', $user->city_id)
                 ->get();
 
+            info($weather);
+            if (count($weather) == 0)
+                continue;
+
             $weather = $weather->toArray();
-            info(end($weather)->id);
             $weather = [end($weather)];
             $message = "";
             $changed = "";
