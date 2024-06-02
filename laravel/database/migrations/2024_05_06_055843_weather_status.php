@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('weatherStatus', function (Blueprint $table) {
             $table->BigIncrements('id');
-            $table->string('city');
+            $table->bigInteger('city_id');
             $table->float('temp');
             $table->time('time');
             $table->float('mm');

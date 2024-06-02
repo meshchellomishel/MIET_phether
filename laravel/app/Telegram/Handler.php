@@ -21,6 +21,31 @@ use \Illuminate\Support\Stringable;
 
 class Handler extends WebhookHandler
 {
+    private function push_city($city_data)
+    {
+        info($city_data);
+        $result = City::push_to_weather_service($city_data);
+        if ($result == false) {
+            Telegraph::message(
+                "Failed to push to weather-service"
+            )->send();
+            return null;
+        }
+
+        $id = DB::table('cities')->insertGetId([
+            'city_name' => $city_data['name'],
+            'state' => $city_data['state'],
+            'country' => $city_data['country'],
+            'longitude' => $city_data['longitude'],
+            'latitude' => $city_data['latitude'],
+
+
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        return $id;
+    }
     private function is_city_setting_exist($city_id)
     {
         $check = DB::table('user__settings')->where('city_id', $city_id)->first();
@@ -45,7 +70,6 @@ class Handler extends WebhookHandler
         }
         $api_key = env('CITY_API_KEY');
         $response = City::get_from_API($city_data, $api_key);
-        info($response);
         if (count($response) == 0 || $response[0] == null) {
             Telegraph::message(
                 "Your city not supported"
@@ -170,6 +194,8 @@ class Handler extends WebhookHandler
         }
 
         $city_data = $this::parse_city($parsed_cmd[0]);
+        if ($city_data == null)
+            return;
         $city_name = $city_data['name'];
         $city_state = $city_data['state'];
         $city_country = $city_data['country'];
@@ -180,17 +206,9 @@ class Handler extends WebhookHandler
             ->where('country', $city_country)
             ->first();
         if ($city == null) {
-            $id = DB::table('cities')->insertGetId([
-                'city_name' => $city_data['name'],
-                'state' => $city_data['state'],
-                'country' => $city_data['country'],
-                'longitude' => $city_data['longitude'],
-                'latitude' => $city_data['latitude'],
-
-
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
+            $id = $this::push_city($city_data);
+            if ($id == null)
+                return;
             $city = DB::table('cities')
                 ->where('id', '=', $id)
                 ->first();
@@ -309,7 +327,7 @@ class Handler extends WebhookHandler
             ->update([
                 "mute" => !($setting['mute'] != 0),
 
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ]);
 
         $this->reply("Changed");
@@ -326,7 +344,7 @@ class Handler extends WebhookHandler
             ->update([
                 "change_notify" => !($setting['change_notify'] != 0),
 
-                'updated_at' => Carbon::now()
+                'updated_at' => Carbon::now(),
             ]);
 
         $this->reply("Changed");
@@ -415,12 +433,9 @@ class Handler extends WebhookHandler
         Log::debug('[TELEGRAM]: Received message: ' . json_encode($this->message->toArray(), JSON_UNESCAPED_UNICODE));
         if ($cityStarted) {
             $city_data = $this::parse_city($text);
-            if ($city_data == null) {
-                Telegraph::message(
-                    "Your city not supported"
-                )->send();
+            if ($city_data == null)
                 return;
-            }
+
             $city_name = $city_data['name'];
             $city_state = $city_data['state'];
             $city_country = $city_data['country'];
@@ -431,17 +446,9 @@ class Handler extends WebhookHandler
                 ->where('country', '=', $city_country)
                 ->first();
             if ($city == null) {
-                $id = DB::table('cities')->insertGetId([
-                    'city_name' => $city_data['name'],
-                    'state' => $city_data['state'],
-                    'country' => $city_data['country'],
-                    'longitude' => $city_data['longitude'],
-                    'latitude' => $city_data['latitude'],
-
-
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                ]);
+                $id = $this::push_city($city_data);
+                if ($id == null)
+                    return;
             } else
                 $id = $city->id;
 
@@ -463,7 +470,7 @@ class Handler extends WebhookHandler
                     "city_name" => $text,
                     'notified' => false,
 
-                    'updated_at' => Carbon::now()
+                    'updated_at' => Carbon::now(),
                 ]);
 
             Telegraph::message("City was updated on " . $text)->send();
@@ -477,7 +484,7 @@ class Handler extends WebhookHandler
                     "notify_time" => date("H:i:s", strtotime($text)),
                     'notified' => false,
 
-                    'updated_at' => Carbon::now()
+                    'updated_at' => Carbon::now(),
                 ]);
 
             Telegraph::message("Time was updated on " . $text)->send();

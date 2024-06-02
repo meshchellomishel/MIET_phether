@@ -31,7 +31,7 @@ class NotifyUsers extends Command
         $changed_ids = array();
         $now = Carbon::now()->setTimezone('MSK');
         $users = DB::table('user__settings')
-            ->select('tg_id', 'user__settings.city_name',
+            ->select('tg_id', 'user__settings.city_id', 'user__settings.city_name',
                 'user__settings.notify_time AS time', 'user__settings.user_id AS user_id',
                 'user__settings.change_notify', 'notified')
             ->join('tgUsers', 'tgUsers.id', '=', 'user__settings.user_id')
@@ -59,9 +59,11 @@ class NotifyUsers extends Command
 
             $chat = TelegraphChat::find($chat_id);
             $weather = DB::table('weatherStatus')
-                ->where('city', '=', $user->city_name)
+                ->where('city_id', '=', $user->city_id)
                 ->get();
 
+            $weather = $weather->toArray();
+            $weather = [end($weather)];
             $message = "";
             $changed = "";
             foreach ($weather as &$weth) {
@@ -75,7 +77,8 @@ class NotifyUsers extends Command
                     $changed_ids []= $weth->id;
 
                 $message .= (
-                    $weth->time . "\t\t\t\t" . $weth->temp . "\t\t\t\t\t" . $weth->mm . "\n"
+                    Carbon::parse($weth->time)->setTimezone('MSK')->format("H:i") .
+                    "\t\t\t\t" . $weth->temp . "\t\t\t\t\t" . $weth->mm . "\n"
                 );
             }
             if ($message == "" ||
@@ -86,7 +89,7 @@ class NotifyUsers extends Command
 
             $message = (
                 "***" . $user->city_name . "***\n\n" .
-                "time           temp   mm\n" .
+                "time       temp   mm\n" .
                 $message . "\n" . $changed
             );
 

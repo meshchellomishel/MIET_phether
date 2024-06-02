@@ -37,13 +37,13 @@ class DatabaseSeeder extends Seeder
 //            'updated_at' => Carbon::now(),
 //        ]);
 
-//        DB::table('telegraph_bots')->insert([
-//            'token' => '6903896292:AAFwThz4Eq0-8CivFqsKf9dOpTozPUkFNZE',
-//            'name' => 'Phether',
-//
-//            'created_at' => Carbon::now(),
-//            'updated_at' => Carbon::now(),
-//        ]);
+        DB::table('telegraph_bots')->insert([
+            'token' => '6903896292:AAFwThz4Eq0-8CivFqsKf9dOpTozPUkFNZE',
+            'name' => 'Phether',
+
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
 //
 //        DB::table('weatherStatus')->insert([
 //            'city' => 'Zelenograd',

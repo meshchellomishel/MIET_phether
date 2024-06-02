@@ -38,8 +38,6 @@ class City extends Model
             $city_name = $city_data[2];
         }
 
-        info('NAME IS ' . $city_name);
-        info('STATE IS ' . $city_state);
         return [
             "name" => $city_name,
             "state" => $city_state,
@@ -56,6 +54,23 @@ class City extends Model
             'state' => $city_data['state'],
             'country' => $city_data['country'],
         ])->json();
+    }
+
+    public static function push_to_weather_service($city_data)
+    {
+        $url = 'http://' .env('WEATHER_SERVICE_ADDR', 'localhost').
+            ':'.env('WEATHER_SERVICE_PORT',8080).'/api/v1/towns/towns';
+        info($url);
+        $response = Http::post($url,[
+            'town_name' => $city_data['country'].'/'.$city_data['state'].'/'.$city_data['name'],
+            'longitude' => $city_data['longitude'],
+            'latitude' => $city_data['latitude'],
+        ]);
+        info($response);
+
+        if ($response->failed())
+            return false;
+        return true;
     }
 
     use HasFactory;
