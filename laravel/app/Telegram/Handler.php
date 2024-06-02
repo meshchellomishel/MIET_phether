@@ -3,6 +3,7 @@
 namespace App\Telegram;
 
 use AllowDynamicProperties;
+use App\City;
 use App\Setting;
 use App\tg_User;
 use App\User;
@@ -20,6 +21,20 @@ use \Illuminate\Support\Stringable;
 
 class Handler extends WebhookHandler
 {
+    private function get_setting_by_id($id)
+    {
+        return DB::table('user__settings')
+            ->select('user__settings.*', 'cities.country', 'cities.state', 'cities.city_name')
+            ->join('cities', 'cities.id', '=', 'user__settings.city_id')
+            ->where('user__settings.id', $id)->first();
+    }
+    private function get_setting_by_user_id($user_id)
+    {
+        return DB::table('user__settings')
+            ->select('user__settings.*', 'cities.country', 'cities.state', 'cities.city_name')
+            ->join('cities', 'cities.id', '=', 'user__settings.city_id')
+            ->where('user_id', $user_id)->get();
+    }
     private function get_current_user_id(): int
     {
         $user_id = $this->chat->storage()->get('user_id');
@@ -36,7 +51,8 @@ class Handler extends WebhookHandler
     }
     private function get_setting_string(\stdClass $value)
     {
-        return $value->city_name . ' ' . $value->notify_time . ' ' .
+        return $value->country . ',' . $value->state  . ',' .
+            $value->city_name . ' ' . $value->notify_time . ' ' .
         ($value->change_notify ? "🔔notify" : "🔕noNotify") . ' ' .
         ($value->mute ? "🔕muted" : "🔊unmuted") . "\n";
     }
@@ -119,60 +135,47 @@ class Handler extends WebhookHandler
             return;
         }
 
-        $city_data = explode(',', $parsed_cmd[0]);
-        if (count($city_data) > 3) {
+        $city_data = City::parse_city($parsed_cmd[0]);
+        if ($city_data == null) {
             Telegraph::message(
-                "Please try again with different command"
+                "Please try another command"
             )->send();
             return;
         }
-
-        $city_name = "";
-        $city_state = "";
-        $city_country = "";
-        if (count($city_data) == 1) {
-            $city_name = $city_data[0];
-        } else if (count($city_data) == 2) {
-            $city_state = $city_data[0];
-            $city_name = $city_data[1];
-        } else if (count($city_data) == 3) {
-            $city_country = $city_data[0];
-            $city_state = $city_data[1];
-            $city_name = $city_data[2];
+        $api_key = env('CITY_API_KEY');
+        $response = City::get_from_API($city_data, $api_key);
+        info($response);
+        if (count($response) == 0 || $response[0] == null) {
+            Telegraph::message(
+                "Your city not supported"
+            )->send();
+            return;
         }
+        $city_name = $response[0]['name'];
+        $city_state = $response[0]['state'];
+        $city_country = $response[0]['country'];
 
-        $city = DB::table('cities')->where('city_name', $city_name)->first();
+        $city = DB::table('cities')
+            ->where('city_name', $city_name)
+            ->where('state', $city_state)
+            ->where('country', $city_country)
+            ->first();
         if ($city == null) {
-            $api_key = env('CITY_API_KEY');
-
-            $response = Http::withHeaders([
-                'X-Api-Key' => $api_key
-            ])->get('https://api.api-ninjas.com/v1/geocoding',[
-                'city' => $city_name,
-                'state' => $city_state,
-                'country' => $city_country,
-            ])->json();
-
-            if (count($response) == 0 || $response[0] == null) {
-                Telegraph::message(
-                    "Your city not supported"
-                )->send();
-                return;
-            }
-
-            DB::table('cities')->insertGetId([
-                    'city_name' => $response[0]['name'],
-                    'state' => $response[0]['state'],
-                    'country' => $response[0]['country'],
-                    'longitude' => $response[0]['longitude'],
-                    'latitude' => $response[0]['latitude'],
+            $id = DB::table('cities')->insertGetId([
+                'city_name' => $response[0]['name'],
+                'state' => $response[0]['state'],
+                'country' => $response[0]['country'],
+                'longitude' => $response[0]['longitude'],
+                'latitude' => $response[0]['latitude'],
 
 
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
             ]);
+            $city = DB::table('cities')
+                ->where('id', '=', $id)
+                ->first();
         }
-        $city = DB::table('cities')->where('city_name', $city_name)->first();
         $city_id = $city->id;
         $city_name = $city->city_name;
 
@@ -221,14 +224,14 @@ class Handler extends WebhookHandler
             return;
         }
 
-        $settings = DB::table('user__settings')->where('user_id', $user_id)->get();
-
+        $settings = $this::get_setting_by_user_id($user_id);
         if (count($settings) != 0) {
             $buttons = array();
             $i = 1;
             $msg = "Your settings:\n\n";
 
             foreach ($settings as &$value) {
+                info('fdgdfg');
                 $msg .= $i . '. ' . $this->get_setting_string($value);
                 $i += 1;
                 $buttons[] = Button::make($value->city_name)->action('menu')->param('id', $value->id);
@@ -239,7 +242,6 @@ class Handler extends WebhookHandler
             )->keyboard(
                 Keyboard::make()->buttons($buttons)
             )->send();
-
             return;
         }
 
@@ -249,7 +251,8 @@ class Handler extends WebhookHandler
     }
     public function menu(mixed $id): void
     {
-        $setting = DB::table('user__settings')->find($id);
+        info('id: ' . $id);
+        $setting = $this::get_setting_by_id($id);
         $this->chat->storage()->set('lastSetting', $setting);
 
         Telegraph::message(
