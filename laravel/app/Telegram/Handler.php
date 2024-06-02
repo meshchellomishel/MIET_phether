@@ -174,8 +174,8 @@ class Handler extends WebhookHandler
             "- Parameter *mute* mean that you don\`t want to be notified by this setting" .
 
             "\n\n" .
-            "new_setting {Country},{State},{City} {time}\n" .
-            "show_settings"
+            "/new\_setting {Country},{State},{City} {time}\n" .
+            "/show\_settings"
         );
     }
     public function new_setting(string $cmd): void
