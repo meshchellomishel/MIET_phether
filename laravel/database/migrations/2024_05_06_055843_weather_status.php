@@ -14,9 +14,13 @@ return new class extends Migration
         Schema::create('weatherStatus', function (Blueprint $table) {
             $table->BigIncrements('id');
             $table->bigInteger('city_id');
-            $table->float('temp');
+            $table->double('temp');
             $table->time('time');
-            $table->float('mm');
+            $table->double('mm');
+            $table->double('precipitation');
+            $table->double('wind_speed');
+            $table->double('wind_direction');
+            $table->double('humidity');
             $table->boolean('weather_changed')->default(false);
 
             $table->timestamps();
