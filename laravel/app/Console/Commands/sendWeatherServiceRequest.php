@@ -54,6 +54,10 @@ class sendWeatherServiceRequest extends Command
                     "temp" => $response["temperature"],
                     "time" => $now,
                     "mm" => $response["mm"],
+                    "humidity" => $response["humidity"],
+                    "precipitation" => $response["precipitation"],
+                    "wind_speed" => $response["wind_speed"],
+                    "wind_direction" => $response["wind_direction"],
 
                     'created_at' => $now,
                     'updated_at' => $now,

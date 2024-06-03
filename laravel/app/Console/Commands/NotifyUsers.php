@@ -84,7 +84,7 @@ class NotifyUsers extends Command
 
                 $message .= (
                     Carbon::parse($weth->time)->setTimezone('MSK')->format("H:i") .
-                    "\t\t\t\t" . $weth->temp . "\t\t\t\t\t" . $weth->mm . "\n"
+                    "\t\t\t\t" . $weth->temp . "         " . $weth->mm . "       ".$weth->wind_speed."\n"
                 );
             }
             if ($message == "" ||
@@ -95,7 +95,7 @@ class NotifyUsers extends Command
 
             $message = (
                 "***".$user->country.','.$user->state.','.$user->city_name."***\n\n" .
-                "time       temp   mm\n" .
+                "time      temp   mm  w/s\n" .
                 $message . "\n" . $changed
             );
 
